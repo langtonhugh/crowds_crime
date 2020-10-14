@@ -4,23 +4,25 @@ library(janitor)       # cleaning
 library(dplyr)         # wrangling
 library(stringr)       # wrangling
 library(tidyr)         # wrangling
-library(readr)         # loading
-library(sf)            # mapping
+library(sf)            # maps
 library(lubridate)     # dates
-library(rnaturalearth) # spatial data
-library(ggplot2)       # viz
-library(here)          # loading local wd
+library(rnaturalearth) # boundaries
+library(ggplot2)       # visual
+library(pdftools)      # get pdf data
 
-# NFL coords
-nfl_coords <- read_csv("https://raw.githubusercontent.com/Sinbad311/CloudProject/master/NFL%20Stadium%20Latitude%20and%20Longtitude.csv")
 
-# NFL attendance
-nfl_attend <- read_csv(here("data", "nfl_2018.csv"))
+# NFL attendance data.
+nfl_attend <- read.csv("data/nfl_2018.csv")
 
+# NFL location data.
+nfl_coords <- read.csv("https://raw.githubusercontent.com/Sinbad311/CloudProject/master/NFL%20Stadium%20Latitude%20and%20Longtitude.csv")
+
+# Clean coords.
 nfl_coords <- nfl_coords %>% 
   clean_names() %>% 
-  mutate(team = if_else(team == "Forty-Niners", "49ers", team))
+  mutate(team = if_else(team == "Forty-Niners", "49ers", as.character(team)))
 
+# Clean attendance.
 nfl_attend <- nfl_attend %>% 
   clean_names() %>% 
   rowwise() %>% 
@@ -28,35 +30,40 @@ nfl_attend <- nfl_attend %>%
   left_join(., nfl_coords, by = c('team' = 'team')) %>% 
   filter(!is.na(conference))
 
-
+# Cities in the open crime data.
 crimedata_cities <- data.frame(
   city = c("Chicago", "Detroit", "Fort Worth", "Kansas City", "Los Angeles", "Louisville", "New York", "San Francisco", "Tucson", "Virginia	Beach")
 )
 
-
+# Further clean and join.
 crim_nfl <- nfl_attend %>% 
-  mutate(city = gsub(team, "", tm), 
+  mutate(city = str_replace(tm, team, ""), 
          city = trimws(city)) %>% 
-  left_join(crimedata_cities, ., by = c('city' = 'city')) %>% 
+  left_join(crimedata_cities) %>% 
   select(-home, -away, -total, -x, -pic) %>% 
-  pivot_longer(cols = starts_with("week"), names_to = "week") %>% 
-  mutate(attendance = as.numeric(ifelse(grepl("\\*", value), NA, as.character(value))), 
-         tm = trimws(tm), 
-         week = trimws(week)) %>% 
-  filter(!is.na(attendance))
+  pivot_longer(cols = starts_with("week"), names_to = "week", values_to = "attend") %>% 
+  mutate(attend_clean = str_replace(attend, "\\\\", ""),
+         attend_clean = str_replace(attend_clean, "\\*", ""),
+         attend_clean = trimws(attend_clean),
+         attend_clean = ifelse(attend_clean == "Bye", NA, attend_clean)) %>% 
+  drop_na(attend_clean)
 
 
-#need to get dates from stupid pdf 
-library(pdftools)
 
 
+
+
+# Read in pdf.
 thing <- pdf_text("https://nflcommunications.com/Documents/2018%20Offseason/04%2019%2018%20-%202018%20Schedule%20Release.pdf") %>% strsplit(split = "\n")
-thing <- unlist(thing[3:9])
+
+# Subset pages 3 to 9 for the relevant info.
+thing <- unlist(thing[3:9]) 
 
 weeknums <- data.frame(
   rownums = which(grepl("WEEK", thing)), 
   weeks = thing[which(grepl("WEEK", thing))]
 )
+
 datenums <- data.frame(
   rownums = which(grepl(", 2018", thing)), 
   dates = thing[which(grepl(", 2018", thing))]
@@ -85,7 +92,7 @@ for (i in 1:nrow(weeknums)) {
 }
 results <- do.call(rbind, datalist)
 
-linkdf <- left_join(linkdf, results, by = c("linkthing", "linkthing"))
+linkdf <- left_join(linkdf, results)
 
 
 datalist <- list()
@@ -101,7 +108,7 @@ for (i in 1:nrow(datenums)) {
 }
 results <- do.call(rbind, datalist)
 
-linkdf <- left_join(linkdf, results, by = c("linkthing", "linkthing"))
+linkdf <- left_join(linkdf, results)
 
 
 datalist <- list()
@@ -117,11 +124,22 @@ for (i in 1:nrow(gamenums)) {
 }
 results <- do.call(rbind, datalist)
 
-
-linkdf <- left_join(linkdf, results, by = c("linkthing", "linkthing")) %>% 
+link_cleaned_df <- linkdf %>% 
+  left_join(results) %>% 
   select(-linkthing) %>% 
   unique() %>% 
-  rowwise() %>% 
+  rowwise() %>%
+  mutate(datenum = trimws(datenum)) %>% 
+  separate(col = datenum, sep = " ", into = c("dayweek", "month", "daynum", "year"), remove = F) %>% 
+  unite(col = "full_date", month, daynum, year, sep = " ") %>%
+  filter(full_date != "NA NA NA") %>% 
+  mutate(full_date_mdy = mdy(full_date))
+
+
+#=================================================================================================
+
+  mutate(game_date     = trimws(paste(str_split(datenum, ",")[[1]][2:3], collapse = " ")))
+  
   mutate(game_date = trimws(paste(str_split(datenum, ",")[[1]][2:3], collapse = " ")), 
          game_time = gsub(str_split(trimws(game), "   ")[[1]][1], "", trimws(game)), 
          home_team =  trimws(str_split(str_split(trimws(game), "   ")[[1]][1], " at ")[[1]][2]), 

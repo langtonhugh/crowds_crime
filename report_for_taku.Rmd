@@ -26,7 +26,7 @@ library(ggplot2)
 #need to get dates from stupid pdf 
 library(pdftools)
 
-nfl_attend <- read.csv("stadium_attendance_data/nfl_2018.csv")
+nfl_attend <- read.csv("data/nfl_2018.csv")
 nfl_coords <- read.csv("https://raw.githubusercontent.com/Sinbad311/CloudProject/master/NFL%20Stadium%20Latitude%20and%20Longtitude.csv")
 
 nfl_coords <- nfl_coords %>% 

@@ -1,0 +1,5 @@
+"0","nfl_attend <- read.csv(""data/nfl_2018.csv"")
+nfl_coords <- read.csv(""https://raw.githubusercontent.com/Sinbad311/CloudProject/master/NFL%20Stadium%20Latitude%20and%20Longtitude.csv"")
+"
+"2","Error in (function (srcref)  : unimplemented type (29) in 'eval'
+"
