@@ -122,6 +122,7 @@ for (i in 1:nrow(gamenums)) {
                                game = gamenums$games[i])
   }
 }
+
 results <- do.call(rbind, datalist)
 
 link_cleaned_df <- linkdf %>% 
@@ -133,23 +134,16 @@ link_cleaned_df <- linkdf %>%
   separate(col = datenum, sep = " ", into = c("dayweek", "month", "daynum", "year"), remove = F) %>% 
   unite(col = "full_date", month, daynum, year, sep = " ") %>%
   filter(full_date != "NA NA NA") %>% 
-  mutate(full_date_mdy = mdy(full_date))
+  mutate(full_date_mdy = mdy(full_date),
+         week          = trimws(tolower(gsub(" ", "_", trimws(weeknum))))) %>%
+  separate(game, into = c("game_cleaned"), sep = "  +") %>% 
+  separate(game_cleaned, into = c("away","home"), sep = " at ") %>% 
+  mutate(home = str_replace(home, " \\(.*\\)", ""),
+         home = str_replace_all(home, "[[:punct:]]", ""),
+         away = str_replace_all(away, "[[:punct:]]", ""))
 
 
-#=================================================================================================
-
-  mutate(game_date     = trimws(paste(str_split(datenum, ",")[[1]][2:3], collapse = " ")))
-  
-  mutate(game_date = trimws(paste(str_split(datenum, ",")[[1]][2:3], collapse = " ")), 
-         game_time = gsub(str_split(trimws(game), "   ")[[1]][1], "", trimws(game)), 
-         home_team =  trimws(str_split(str_split(trimws(game), "   ")[[1]][1], " at ")[[1]][2]), 
-         home_team = gsub("#", "", home_team),
-         home_team = gsub("\\*", "", home_team),
-         home_team = trimws(str_split(home_team, "\\(")[[1]][1]),
-         game_datetime = mdy(game_date), 
-         game_week = trimws(tolower(gsub(" ", "_", trimws(weeknum)))))
-
-
+#====================================================================
 
 all_nfl <- left_join(crim_nfl, linkdf, by = c("tm" = "home_team", "week" = "game_week"))
 
