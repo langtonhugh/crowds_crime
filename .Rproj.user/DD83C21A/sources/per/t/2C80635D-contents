@@ -6,7 +6,7 @@ library(stringr)       # wrangling
 library(tidyr)         # wrangling
 library(sf)            # maps
 library(lubridate)     # dates
-library(rnaturalearth) # boundaries
+library(maps)          # boundaries
 library(ggplot2)       # visual
 library(pdftools)      # get pdf data
 
@@ -152,50 +152,50 @@ link_cleaned_df <- link_df %>%
 all_nfl <- crim_nfl %>% 
   rename(home = tm) %>% 
   left_join(link_cleaned_df) %>% 
-  drop_na(full_date_mdy) %>% 
+  drop_na(full_date_ymd) %>% 
   filter(city %in% crimedata_cities$city)
 
-# Download open crime data for 2018.
-crimes_df <- get_crime_data(
+# Download open crime data for 2018 and filter for the cities with NFL games.
+crimes_sf <- get_crime_data(
   years = 2018, 
   cities = unique(all_nfl$city), 
-  type = "core"
+  type = "core",
+  output = "sf"
 ) 
 
-crimes_filter_df <- crimes_df %>% 
+# Format dates and subset crimes for the dates on which there were NFL games.
+crimes_filter_sf <- crimes_sf %>% 
   mutate(date_single = str_extract(date_single, "^.{10}"),
          date_single_ymd = ymd(date_single)) %>% 
-  filter(date_single_ymd %in% all_nfl$full_date_mdy)
+  filter(date_single_ymd %in% all_nfl$full_date_ymd) %>% 
+  st_transform(2163)
 
-nfl_crimes_df <- left_join(all_nfl, crimes_filter_df)
+# USA map for check
+usa_sf <- st_as_sf(map("state", fill=TRUE, plot =FALSE))
+usa_sf <- st_transform(usa_sf, st_crs(crimes_filter_sf))
+plot(st_geometry(usa_sf))
+plot(st_geometry(crimes_filter_sf), add = T, col = "red")
 
-# By day
-# nfl_crimes <- left_join(all_nfl, crimes, by = c("game_datetime" = "date_single_2"))
+# Create buffer around stadium locations.
+nfl_buffers_sf <- all_nfl %>%
+  distinct(city, .keep_all = T) %>% 
+  st_as_sf(coords = c(x = "longitude", y = "latitude"), crs = 4326) %>% 
+  st_transform(2163) %>% 
+  st_buffer(dist = 1609)
 
-# Using Albers projection (https://en.wikipedia.org/wiki/Albers_projection) for which crs is 9822
-nfl_crimes_sf <- st_as_sf(nfl_crimes, coords = c("longitude.y", "latitude.y"), crs = 4326)
-nfl_crimes_sf <- st_transform(nfl_crimes_sf, crs = 102008)
+# Clip crimes by these buffers.
+nfl_crimes_sf <- st_intersection(nfl_buffers_sf, crimes_filter_sf)
 
-nfl_coords_sf <- st_as_sf(nfl_coords, coords = c("longitude", "latitude"), crs = 4326)
-nfl_stadiums_sf <- st_as_sf(nfl_coords_sf, coords = c("longitude", "latitude"), crs = 4326)
-nfl_stadiums_sf <- st_transform(nfl_coords_sf, crs = 102008)
-
-
-usa_poly <- ne_states(geounit = "United States of America", returnclass = 'sf')
-usa_poly <- st_transform(usa_poly, crs = 102008)
+# Aggregate by team
+nfl_crimes_df <- nfl_crimes_sf %>% 
+  st_set_geometry(NULL) %>% 
+  group_by(home) %>% 
+  summarise(crime_count = n()) %>% 
+  ungroup()
 
 
-ggplot() +
-  geom_sf(data = st_geometry(usa_poly %>% filter(name != "Hawaii", name != "Alaska"))) + 
-  geom_sf(data = st_geometry(nfl_stadiums_sf), col = "blue") + 
-  theme_void() + 
-  theme(panel.grid.major = element_line(colour = "white"))
 
-staduim_buff <- st_buffer(nfl_stadiums_sf, 1609) #make 1 mile buffer
-nfl_crimes_sf <- st_intersection(staduim_buff, nfl_crimes_sf) #select only crimes within these buffers
-
-count(nfl_crimes_sf, tm)
-
+#============================================================
 
 ggplot()+ 
   geom_sf(data = st_geometry(usa_poly %>% filter(name != "Hawaii", name != "Alaska"))) + 

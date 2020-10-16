@@ -4,16 +4,16 @@
     "created" : 1601977733910.000,
     "dirty" : false,
     "encoding" : "UTF-8",
-    "folds" : "",
-    "hash" : "1982286045",
+    "folds" : "81|29|90|0|\n98|29|107|0|\n114|29|123|0|\n",
+    "hash" : "376531320",
     "id" : "2C80635D",
-    "lastKnownWriteTime" : 1602849965,
-    "last_content_update" : 1602849965465,
+    "lastKnownWriteTime" : 1602866298,
+    "last_content_update" : 1602866298510,
     "path" : "~/GitHub/crowds_crime/script/NFL_2018.R",
     "project_path" : "script/NFL_2018.R",
     "properties" : {
-        "cursorPosition" : "170,0",
-        "scrollLine" : "154"
+        "cursorPosition" : "197,61",
+        "scrollLine" : "174"
     },
     "read_only" : false,
     "read_only_alternatives" : [

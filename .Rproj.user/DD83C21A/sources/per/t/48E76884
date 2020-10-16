@@ -1,0 +1,33 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1602859120952.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "48E76884",
+    "lastKnownWriteTime" : 2117404610368,
+    "last_content_update" : 1602859120952,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "D7004D23",
+        "caption" : "all_nfl",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=all_nfl&cache_key=D7004D23",
+        "displayedObservations" : 64,
+        "environment" : "",
+        "expression" : "all_nfl",
+        "object" : "all_nfl",
+        "preview" : 0,
+        "totalObservations" : 64,
+        "variables" : 21
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}
