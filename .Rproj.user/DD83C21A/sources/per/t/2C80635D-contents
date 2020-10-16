@@ -48,37 +48,36 @@ crim_nfl <- nfl_attend %>%
          attend_clean = ifelse(attend_clean == "Bye", NA, attend_clean)) %>% 
   drop_na(attend_clean)
 
-
-
-
-
-
 # Read in pdf.
 thing <- pdf_text("https://nflcommunications.com/Documents/2018%20Offseason/04%2019%2018%20-%202018%20Schedule%20Release.pdf") %>% strsplit(split = "\n")
 
 # Subset pages 3 to 9 for the relevant info.
 thing <- unlist(thing[3:9]) 
 
+# Create df to grab week titles.
 weeknums <- data.frame(
   rownums = which(grepl("WEEK", thing)), 
   weeks = thing[which(grepl("WEEK", thing))]
 )
 
+# Create df for dates of games.
 datenums <- data.frame(
   rownums = which(grepl(", 2018", thing)), 
   dates = thing[which(grepl(", 2018", thing))]
 )
 
+# Create data frame for games e.g. team1 at team2.
 gamenums <- data.frame(
   rownums = which(grepl(" at ", thing)), 
   games = thing[which(grepl(" at ", thing))]
 )
 
-linkdf <- data.frame(
+# IDs.
+link_df <- data.frame(
   linkthing = c(1:329)
 )
 
-
+# Loop through weeks.
 datalist <- list()
 for (i in 1:nrow(weeknums)) {
   if (i < nrow(weeknums)) {
@@ -90,11 +89,12 @@ for (i in 1:nrow(weeknums)) {
                                weeknum = weeknums$weeks[i])
   }
 }
+
 results <- do.call(rbind, datalist)
 
-linkdf <- left_join(linkdf, results)
+link_df <- left_join(link_df, results)
 
-
+# Loop through dates.
 datalist <- list()
 for (i in 1:nrow(datenums)) {
   if (i < nrow(datenums)) {
@@ -108,9 +108,9 @@ for (i in 1:nrow(datenums)) {
 }
 results <- do.call(rbind, datalist)
 
-linkdf <- left_join(linkdf, results)
+link_df <- left_join(link_df, results)
 
-
+# Look through versus teams.
 datalist <- list()
 for (i in 1:nrow(gamenums)) {
   if (i < nrow(gamenums)) {
@@ -125,7 +125,8 @@ for (i in 1:nrow(gamenums)) {
 
 results <- do.call(rbind, datalist)
 
-link_cleaned_df <- linkdf %>% 
+# Clean and tidy up.
+link_cleaned_df <- link_df %>% 
   left_join(results) %>% 
   select(-linkthing) %>% 
   unique() %>% 
@@ -134,31 +135,42 @@ link_cleaned_df <- linkdf %>%
   separate(col = datenum, sep = " ", into = c("dayweek", "month", "daynum", "year"), remove = F) %>% 
   unite(col = "full_date", month, daynum, year, sep = " ") %>%
   filter(full_date != "NA NA NA") %>% 
-  mutate(full_date_mdy = mdy(full_date),
+  mutate(full_date_ymd = mdy(full_date),
          week          = trimws(tolower(gsub(" ", "_", trimws(weeknum))))) %>%
-  separate(game, into = c("game_cleaned"), sep = "  +") %>% 
-  separate(game_cleaned, into = c("away","home"), sep = " at ") %>% 
-  mutate(home = str_replace(home, " \\(.*\\)", ""),
-         home = str_replace_all(home, "[[:punct:]]", ""),
-         away = str_replace_all(away, "[[:punct:]]", ""))
+  separate(game, into = c("game_cleaned", "time1", "time2", "network"), sep = "  +", remove = F) %>% 
+  separate(game_cleaned, into = c("away","home"), sep = " at ", remove = F) %>% # warning is fine - just intro NA.
+  mutate(home  = str_replace(home, " \\(.*\\)", ""),       
+         home  = str_replace_all(home, "[[:punct:]]", ""),
+         away  = str_replace_all(away, "[[:punct:]]", ""),
+         time1 = str_replace_all(time1, pattern = "FOX/NFLN\r|NBC\r|ESPN\r|FOX\r|FOX/NFLN" , replacement = ""),
+         time2 = str_replace_all(time2, pattern = "FOX/NFLN\r|NBC\r|ESPN\r|FOX\r|CBS| \r|NFLN\r|TBD|\r" , replacement = ""))
 
+# Leaving the time cleaning for now because I think crime on the whole day is more reasonable
+# than a specific time frame due to pre and after-events.
 
-#====================================================================
+# Join.
+all_nfl <- crim_nfl %>% 
+  rename(home = tm) %>% 
+  left_join(link_cleaned_df) %>% 
+  drop_na(full_date_mdy) %>% 
+  filter(city %in% crimedata_cities$city)
 
-all_nfl <- left_join(crim_nfl, linkdf, by = c("tm" = "home_team", "week" = "game_week"))
-
-crimes <- get_crime_data(
+# Download open crime data for 2018.
+crimes_df <- get_crime_data(
   years = 2018, 
-  cities = unique(crim_nfl$city), 
+  cities = unique(all_nfl$city), 
   type = "core"
 ) 
 
-crimes <- crimes %>% 
-  mutate(date_single_2 = ymd_hms(date_single))
+crimes_filter_df <- crimes_df %>% 
+  mutate(date_single = str_extract(date_single, "^.{10}"),
+         date_single_ymd = ymd(date_single)) %>% 
+  filter(date_single_ymd %in% all_nfl$full_date_mdy)
 
-crimes$date_single_2 <- as.Date(crimes$date_single_2)
+nfl_crimes_df <- left_join(all_nfl, crimes_filter_df)
 
-nfl_crimes <- left_join(all_nfl, crimes, by = c("game_datetime" = "date_single_2"))
+# By day
+# nfl_crimes <- left_join(all_nfl, crimes, by = c("game_datetime" = "date_single_2"))
 
 # Using Albers projection (https://en.wikipedia.org/wiki/Albers_projection) for which crs is 9822
 nfl_crimes_sf <- st_as_sf(nfl_crimes, coords = c("longitude.y", "latitude.y"), crs = 4326)
