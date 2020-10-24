@@ -1,0 +1,33 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1603553176721.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "E42404D3",
+    "lastKnownWriteTime" : 7160569971446915616,
+    "last_content_update" : 1603553176721,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "1781AAE2",
+        "caption" : "nfl_crimes_att_df",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=nfl_crimes_att_df&cache_key=1781AAE2",
+        "displayedObservations" : "31",
+        "environment" : "",
+        "expression" : "nfl_crimes_att_df",
+        "object" : "nfl_crimes_att_df",
+        "preview" : "0",
+        "totalObservations" : "31",
+        "variables" : "22"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

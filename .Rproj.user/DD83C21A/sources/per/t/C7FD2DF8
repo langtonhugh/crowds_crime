@@ -1,19 +1,19 @@
 {
     "collab_server" : "",
     "contents" : "",
-    "created" : 1601977733910.000,
+    "created" : 1603541258055.000,
     "dirty" : false,
     "encoding" : "UTF-8",
-    "folds" : "81|29|90|0|\n98|29|107|0|\n114|29|123|0|\n",
-    "hash" : "376531320",
-    "id" : "2C80635D",
-    "lastKnownWriteTime" : 1602866298,
-    "last_content_update" : 1602866298510,
+    "folds" : "",
+    "hash" : "4267275214",
+    "id" : "C7FD2DF8",
+    "lastKnownWriteTime" : 1603556562,
+    "last_content_update" : 1603556562738,
     "path" : "~/GitHub/crowds_crime/script/NFL_2018.R",
     "project_path" : "script/NFL_2018.R",
     "properties" : {
-        "cursorPosition" : "197,61",
-        "scrollLine" : "174"
+        "cursorPosition" : "259,30",
+        "scrollLine" : "241"
     },
     "read_only" : false,
     "read_only_alternatives" : [

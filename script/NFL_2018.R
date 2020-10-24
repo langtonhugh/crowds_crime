@@ -17,6 +17,9 @@ nfl_attend <- read.csv("data/nfl_2018.csv")
 # NFL location data.
 nfl_coords <- read.csv("https://raw.githubusercontent.com/Sinbad311/CloudProject/master/NFL%20Stadium%20Latitude%20and%20Longtitude.csv")
 
+# Manual check suggests that the coordinates for LA teams might not be correct for 2018 (the crime
+# data year) because both teams rellocated in the last decade or so.
+
 # Clean coords.
 nfl_coords <- nfl_coords %>% 
   clean_names() %>% 
@@ -158,10 +161,14 @@ all_nfl <- crim_nfl %>%
 # Download open crime data for 2018 and filter for the cities with NFL games.
 crimes_sf <- get_crime_data(
   years = 2018, 
-  cities = unique(all_nfl$city), 
+  cities = unique(all_nfl$city), # comment out for crimes_all_sf
   type = "core",
   output = "sf"
 ) 
+
+# crimes_all_sf <- crimes_sf
+# st_write(obj = crimes_all_sf, dsn = "data/crimes_all.shp")
+
 
 # Format dates and subset crimes for the dates on which there were NFL games.
 crimes_filter_sf <- crimes_sf %>% 
@@ -171,29 +178,81 @@ crimes_filter_sf <- crimes_sf %>%
   st_transform(2163)
 
 # USA map for check
-usa_sf <- st_as_sf(map("state", fill=TRUE, plot =FALSE))
-usa_sf <- st_transform(usa_sf, st_crs(crimes_filter_sf))
-plot(st_geometry(usa_sf))
-plot(st_geometry(crimes_filter_sf), add = T, col = "red")
+# usa_sf <- st_as_sf(map("state", fill=TRUE, plot =FALSE))
+# usa_sf <- st_transform(usa_sf, st_crs(crimes_filter_sf))
+# plot(st_geometry(usa_sf))
+# plot(st_geometry(crimes_filter_sf), add = T, col = "red")
+
+# Stadium location checks
+stads_df <- all_nfl %>%
+  distinct(home, .keep_all = T) %>% 
+  select(home, latitude, longitude)
 
 # Create buffer around stadium locations.
 nfl_buffers_sf <- all_nfl %>%
-  distinct(city, .keep_all = T) %>% 
+  distinct(home, .keep_all = T) %>% 
+  select(home, latitude, longitude) %>% 
   st_as_sf(coords = c(x = "longitude", y = "latitude"), crs = 4326) %>% 
   st_transform(2163) %>% 
   st_buffer(dist = 1609)
 
+# usa_sf <- st_as_sf(map("state", fill=TRUE, plot =FALSE))
+# usa_sf <- st_transform(usa_sf, st_crs(nfl_buffers_sf))
+# ggplot() +
+#   geom_sf(data = usa_sf) +
+#   geom_sf(data = nfl_buffers_sf, col = "Red", size = 2) +
+#   geom_sf(data = crimes_filter_sf, col = "pink")
+
+
+# save for QGIS
+# st_write(obj = nfl_buffers_sf  , dsn = "data/nfl_buffers.shp")
+# st_write(obj = crimes_filter_sf, dsn = "data/crimes_filter.shp")
+# st_write(obj = crimes_sf, dsn = "data/crimes.shp")
+
+
+# plot check
+# plot(st_geometry(filter(nfl_buffers_sf, home == "San Francisco 49ers")))
+# plot(st_geometry(filter(crimes_filter_sf)), add = T)
+# 
+# plot(st_geometry(filter(nfl_buffers_sf, home == "Los Angeles Chargers")))
+# plot(st_geometry(filter(crimes_sf)), add = T)
+
+# test
+# crimes_sf <- st_transform(crimes_sf, 2163)
+
 # Clip crimes by these buffers.
 nfl_crimes_sf <- st_intersection(nfl_buffers_sf, crimes_filter_sf)
+
+# Note we have lost some - I think this is because (1) crime data does not capture New Jersey where the
+# New York teams' stadiums are, and (2) the LA teams stadium location is San Diego.
+unique(nfl_crimes_sf$home)
+
+# Join nfl_crimes_sf with all_nfl
+
+# city_name         city
+# home              home
+# date_single_ymd   full_date_ymd
 
 # Aggregate by team
 nfl_crimes_df <- nfl_crimes_sf %>% 
   st_set_geometry(NULL) %>% 
-  group_by(home) %>% 
+  group_by(home, date_single_ymd) %>% 
   summarise(crime_count = n()) %>% 
-  ungroup()
+  ungroup() %>% 
+  rename(full_date_ymd = date_single_ymd) 
 
+# Join attendence data.
+nfl_crimes_att_df <- nfl_crimes_df %>% 
+  left_join(all_nfl) %>% 
+  drop_na(team) %>% 
+  mutate(attend = as.numeric(attend))
 
+# Visual
+ggplot(data = nfl_crimes_att_df, mapping = aes(x = attend, y = crime_count, colour = home)) +
+  geom_point() 
+
+# Test
+cor.test(nfl_crimes_att_df$crime_count, nfl_crimes_att_df$attend, method = "pearson") # nowt
 
 #============================================================
 
