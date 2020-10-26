@@ -245,10 +245,15 @@ nfl_crimes_df <- nfl_crimes_sf %>%
 nfl_crimes_att_df <- nfl_crimes_df %>% 
   left_join(all_nfl) %>% 
   drop_na(team) %>% 
-  mutate(attend = as.numeric(attend))
+  mutate(attend = as.numeric(attend),
+         crime_rate = (crime_count/attend)*1000)
+  
 
 # Visual
 ggplot(data = nfl_crimes_att_df, mapping = aes(x = attend, y = crime_count, colour = home)) +
+  geom_point() 
+
+ggplot(data = nfl_crimes_att_df, mapping = aes(x = attend, y = crime_rate, colour = home)) +
   geom_point() 
 
 # Test
@@ -256,31 +261,31 @@ cor.test(nfl_crimes_att_df$crime_count, nfl_crimes_att_df$attend, method = "pear
 
 #============================================================
 
-ggplot()+ 
-  geom_sf(data = st_geometry(usa_poly %>% filter(name != "Hawaii", name != "Alaska"))) + 
-  geom_sf(data = nfl_crimes_sf, col = "red") + 
-  theme_void() + 
-  theme(panel.grid.major = element_line(colour = "white"))
-
-crimes_against_persons <- nfl_crimes_sf %>% 
-  st_set_geometry(NULL) %>% 
-  filter(offense_against == "persons") %>% 
-  group_by(tm, week, attendance) %>% 
-  count()
-
-
-
-crimes_against_property <- nfl_crimes_sf %>% 
-  st_set_geometry(NULL) %>% 
-  filter(offense_against == "property") %>% 
-  group_by(tm, week, attendance) %>% 
-  count() %>% 
-  mutate(crime_per_1000_ppl = n/attendance*1000)
-
-ggplot(data = crimes_against_property, aes(x = attendance, y = crime_per_1000_ppl)) + 
-  geom_point() +
-  geom_line() + 
-  facet_wrap(~tm, scales = "free")
+# ggplot()+ 
+#   geom_sf(data = st_geometry(usa_poly %>% filter(name != "Hawaii", name != "Alaska"))) + 
+#   geom_sf(data = nfl_crimes_sf, col = "red") + 
+#   theme_void() + 
+#   theme(panel.grid.major = element_line(colour = "white"))
+# 
+# crimes_against_persons <- nfl_crimes_sf %>% 
+#   st_set_geometry(NULL) %>% 
+#   filter(offense_against == "persons") %>% 
+#   group_by(tm, week, attendance) %>% 
+#   count()
+# 
+# 
+# 
+# crimes_against_property <- nfl_crimes_sf %>% 
+#   st_set_geometry(NULL) %>% 
+#   filter(offense_against == "property") %>% 
+#   group_by(tm, week, attendance) %>% 
+#   count() %>% 
+#   mutate(crime_per_1000_ppl = n/attendance*1000)
+# 
+# ggplot(data = crimes_against_property, aes(x = attendance, y = crime_per_1000_ppl)) + 
+#   geom_point() +
+#   geom_line() + 
+#   facet_wrap(~tm, scales = "free")
 
 
 

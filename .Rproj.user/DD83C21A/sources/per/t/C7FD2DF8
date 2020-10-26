@@ -5,15 +5,15 @@
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "4267275214",
+    "hash" : "1630202011",
     "id" : "C7FD2DF8",
-    "lastKnownWriteTime" : 1603556562,
-    "last_content_update" : 1603556562738,
+    "lastKnownWriteTime" : 1603558395,
+    "last_content_update" : 1603558395759,
     "path" : "~/GitHub/crowds_crime/script/NFL_2018.R",
     "project_path" : "script/NFL_2018.R",
     "properties" : {
-        "cursorPosition" : "259,30",
-        "scrollLine" : "241"
+        "cursorPosition" : "291,0",
+        "scrollLine" : "243"
     },
     "read_only" : false,
     "read_only_alternatives" : [
