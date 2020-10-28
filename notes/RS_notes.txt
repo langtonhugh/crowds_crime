@@ -1,0 +1,7 @@
+- other outcome variables e.g. ambulance or calls for service, non-crime
+- safegraph data (register as academic, can download subset for free)
+- choose Dalas as we have crime data for that
+- safegraph have lat-lon coordinates for POI and the ambient population around them
+- cleaned data / data dictionary for messy data for the hackathon
+- lit. review + test hypothesis for the short paper
+- date, programme for hackathon (two half days)
