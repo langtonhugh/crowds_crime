@@ -5,15 +5,15 @@
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "787607308",
+    "hash" : "2134676381",
     "id" : "97E6556C",
-    "lastKnownWriteTime" : 1604769595,
-    "last_content_update" : 1604769595044,
+    "lastKnownWriteTime" : 1604839087,
+    "last_content_update" : 1604839087370,
     "path" : "~/GitHub/crowds_crime/script/MLB.R",
     "project_path" : "script/MLB.R",
     "properties" : {
-        "cursorPosition" : "221,0",
-        "scrollLine" : "206"
+        "cursorPosition" : "245,98",
+        "scrollLine" : "227"
     },
     "read_only" : false,
     "read_only_alternatives" : [

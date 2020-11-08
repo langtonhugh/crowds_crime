@@ -50,8 +50,10 @@ crimes_sf <- get_crime_data(
   output = "sf"
 ) 
 
-# Save workspace so we have this.
-# save.image(file = "mlb_workspace.RData")
+# ============================================= #
+# Save workspace so we have this.               #
+# save.image(file = "mlb_workspace.RData")      #
+# ============================================= #
 
 # Check punctuation of retrosheet city names.
 unique(gl_2018_pitch_df$CITY)
@@ -160,18 +162,29 @@ stads_crimes_df <- stads_crimes_df %>%
 # Join back attendance data.
 gl_stads_crimes_df <- left_join(gl_2018_pitch_df, stads_crimes_df)
 
-# Only keep games with more than 1 crime, and calculate a rate.
-gl_stads_sub_crimes_df <- gl_stads_crimes_df %>% 
-  filter(crime_count > 1) %>% 
-  mutate(crime_rate = 10000*(crime_count/attendance))
+# Check variables.
+min(gl_stads_crimes_df$crime_count) # some zeros
+min(gl_stads_crimes_df$attendance)  # some zeros
+
+ggplot(data = gl_stads_crimes_df) +
+  geom_histogram(mapping = aes(x = attendance), bins = 30)
+
+ggplot(data = gl_stads_crimes_df) +
+  geom_histogram(mapping = aes(x = crime_count), bins = 30)
+
+p_att <- ggplot(data = gl_stads_crimes_df) +
+  geom_histogram(mapping = aes(x = attendance), bins = 30) +
+  facet_wrap(~NAME, scales = "free")
+
+ggsave(plot = p_att, filename = "visuals/att_facet.png", height = 10, width = 25, unit = "cm")
+
+# Only keep games with more than 1 crime, more than 1 attendence, and calculate a rate.
+gl_stads_sub_crimes_df <- gl_stads_crimes_df %>%
+  filter(attendance > 1 & crime_count > 1) %>% 
+  mutate(crime_rate = 10000*(crime_count/attendance)) 
 
 # Scientific notation off.
 options(scipen=99999)
-
-# Visualize attendance. If not much variation, can we really adjust by this?
-# ggplot(data = gl_stads_sub_crimes_df) +
-#   geom_histogram(mapping = aes(x = attendance), bins = 60) +
-#   facet_wrap(~NAME, scales = "free_y")
 
 # Visualize relationship across all teams.
 p_counts <- ggplot(data = gl_stads_sub_crimes_df) +
@@ -189,9 +202,13 @@ main_plot <- plot_grid(p_counts, p_rates, nrow = 1)
 # Save.
 ggsave(plot = main_plot, filename = "visuals/mbl.png", height = 10, width = 25, unit = "cm")
 
-# Correlation.
+# Correlation. Note that there are some ties.
 count_test <- cor.test(gl_stads_sub_crimes_df$attendance, gl_stads_sub_crimes_df$crime_count, method = "spearman")
 rate_test  <- cor.test(gl_stads_sub_crimes_df$attendance, gl_stads_sub_crimes_df$crime_rate , method = "spearman")
+
+count_test
+rate_test
+
 
 # Visualize relationship by team.
 pt_counts <- ggplot(data = gl_stads_sub_crimes_df) +
@@ -200,7 +217,8 @@ pt_counts <- ggplot(data = gl_stads_sub_crimes_df) +
   labs(y = "Crime count") +
   theme_bw() +
   theme(legend.position = "none",
-        axis.text.x = element_text(size = 4.5),
+        axis.text = element_text(size = 4),
+        axis.title = element_text(size = 7),
         strip.background = element_rect(fill = "transparent"),
         strip.text = element_text(size = 6))  
 
@@ -210,17 +228,20 @@ pt_rates <- ggplot(data = gl_stads_sub_crimes_df) +
   labs(y = "Crime rate per 10,000 attendees") +
   theme_bw() +
   theme(legend.position = "none",
-        axis.text.x = element_text(size = 4.5),
+        axis.text = element_text(size = 4),
+        axis.title = element_text(size = 7),
         strip.background = element_rect(fill = "transparent"),
         strip.text = element_text(size = 6)) 
 
 # Plot.
-full_plot <- plot_grid(pt_counts, pt_rates, nrow = 1)
+facet_plot <- plot_grid(pt_counts, pt_rates, nrow = 1)
+
+title_plot <- ggdraw() +
+  draw_label("Relationship between crime and attendance at Major League Baseball games during 2018.", size = 10, hjust = 0.5)
+
+
+full_plot <- plot_grid(title_plot, facet_plot, nrow = 2, rel_heights = c(0.1,1))
 
 # Save.
 ggsave(plot = full_plot, filename = "visuals/mbl_facet.png", height = 12, width = 30, unit = "cm")
-
-
-
-
 
