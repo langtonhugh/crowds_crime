@@ -1,3 +1,4 @@
-# Ignore everything
+# Ignore new workspace images. One is already on repo (mlb_workspace.RData) but new one (mlb_density_workspace.RData) too large. It is
+# saved on SL's local machine. See MLB script for when workspaces saved.
 *.RData
 
