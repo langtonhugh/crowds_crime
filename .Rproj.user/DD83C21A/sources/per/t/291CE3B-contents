@@ -1,5 +1,6 @@
 library(tmaptools)
 library(maps)
+library(osmdata)
 library(cowplot)
 library(crimedata)
 library(dplyr)
@@ -8,6 +9,7 @@ library(tidyr)
 library(lubridate)
 library(ggplot2)
 library(sf)
+library(purrr)
 
 # Major League Baseball team data obtained from https://www.retrosheet.org/gamelogs/index.html.
 gl_2018_df <- read_csv("data/GL2018.txt", col_names = F)
@@ -107,7 +109,7 @@ stads_df <- bind_rows(stads_list, .id = "stadium_name")
 stads_sf <- st_as_sf(stads_df, coords = c(x = "x", y = "y"), crs = 4326)
 
 # USA map for check.
-usa_sf <- st_as_sf(map("state", fill=TRUE, plot =FALSE))
+usa_sf <- st_as_sf(maps::map("state", fill=TRUE, plot =FALSE))
 usa_sf <- st_transform(usa_sf, 4326)
 
 # Plot.
@@ -209,10 +211,9 @@ rate_test  <- cor.test(gl_stads_sub_crimes_df$attendance, gl_stads_sub_crimes_df
 count_test
 rate_test
 
-
 # Visualize relationship by team.
 pt_counts <- ggplot(data = gl_stads_sub_crimes_df) +
-  geom_point(mapping = aes(x = attendance, y = crime_count, colour = NAME), size = 0.5) +
+  geom_point(mapping = aes(x = attendance, y = crime_count, colour = NAME), size = 0.7) +
   facet_wrap(~NAME, scales = "free") +
   labs(y = "Crime count") +
   theme_bw() +
@@ -223,7 +224,7 @@ pt_counts <- ggplot(data = gl_stads_sub_crimes_df) +
         strip.text = element_text(size = 6))  
 
 pt_rates <- ggplot(data = gl_stads_sub_crimes_df) +
-  geom_point(mapping = aes(x = attendance, y = crime_rate, colour = NAME), size = 0.5) +
+  geom_point(mapping = aes(x = attendance, y = crime_rate, colour = NAME), size = 0.7) +
   facet_wrap(~NAME, scales = "free") +
   labs(y = "Crime rate per 10,000 attendees") +
   theme_bw() +
@@ -244,4 +245,130 @@ full_plot <- plot_grid(title_plot, facet_plot, nrow = 2, rel_heights = c(0.1,1))
 
 # Save.
 ggsave(plot = full_plot, filename = "visuals/mbl_facet.png", height = 12, width = 30, unit = "cm")
+
+# Checking building footprint data from OSM.
+
+# Define bounding boxes around stadium locations.
+stad_bb_list <- list()
+
+for (i in sort(stads_buffers_sf$stadium_name)) {
+
+bb_sf <- stads_buffers_sf %>%
+  filter(stadium_name == i) %>% 
+  st_bbox() %>% 
+  st_as_sfc(crs = 2163) %>% 
+  st_transform(crs = 4326) %>% 
+  st_bbox()
+
+stad_bb_list[[i]] <- bb_sf
+
+}
+
+# Extract bb numbers into lists.
+bb_fun <- function(x) {
+  c(x[[1]],x[[2]],x[[3]],x[[4]])
+}
+  
+bb_extracted_list <- lapply(stad_bb_list, bb_fun)  
+
+# Loop OSM query for each bounding box.
+osm_fun <- function(x){
+  opq(bbox = x) %>%
+    add_osm_feature(key = 'building') %>% 
+    osmdata_sf()
+}
+
+osm_result_list <- lapply(bb_extracted_list, osm_fun)
+
+# Extract polygons from results and project.
+osm_result_poly_list <- lapply(osm_result_list, function(x) x$osm_polygons %>% st_transform(crs = 2163))
+
+# Split buffer df into list.
+stads_buffers_list <- group_split(stads_buffers_sf, stadium_name)
+
+# Name elements according to other list (alphabetical).
+names(stads_buffers_list) <- names(osm_result_poly_list)
+
+plot(st_geometry(osm_result_poly_list[[7]]))
+plot(st_geometry(stads_buffers_list[[7]]), add = T, border = "red")
+
+# Run intersection on each element pairs of these lists. Warnings is standard.
+osm_result_poly_clipped_list <- map2(stads_buffers_list, osm_result_poly_list, st_intersection)
+
+# Calculate areal building footprint for each stadium buffer.
+footprint_list <- lapply(osm_result_poly_clipped_list, function(x) sum(st_area(x)))
+
+# Get footprint measurements into df.
+footprint_df <- footprint_list %>% 
+  bind_rows() %>% 
+  mutate(id = 1) %>% 
+  pivot_longer(cols = -id, names_to = "NAME", values_to = "area") %>% 
+  select(-id) %>% 
+  rename(build_footprint = area)
+
+# Join info back with the game data.
+gl_stads_sub_crimes_df <- left_join(gl_stads_sub_crimes_df, footprint_df)
+
+# Calculate attendance density. 
+gl_stads_sub_crimes_df <- gl_stads_sub_crimes_df %>% 
+  mutate(attend_density = attendance/build_footprint,
+         attend_density_n = as.numeric(attend_density))
+
+# Relationship between crowd density and crime across all stadiums.
+ggplot(data = gl_stads_sub_crimes_df) +
+  geom_point(mapping = aes(x = attend_density_n, y = crime_count, colour = NAME))
+
+# Visualize for counts and rates.
+p_c_density <- ggplot(data = gl_stads_sub_crimes_df) +
+  theme_bw() +
+  geom_point(mapping = aes(x = attend_density_n, y = crime_count, colour = NAME), size = 0.7) +
+  facet_wrap(~ NAME, scale = "free") +
+  labs(x = "Crowd density", y = "Crime count") +
+  theme_bw() +
+  theme(legend.position = "none",
+        axis.text = element_text(size = 4),
+        axis.title = element_text(size = 7),
+        strip.background = element_rect(fill = "transparent"),
+        strip.text = element_text(size = 6))
+
+p_cr_density <- ggplot(data = gl_stads_sub_crimes_df) +
+  theme_bw() +
+  geom_point(mapping = aes(x = attend_density_n, y = crime_rate, colour = NAME), size = 0.7) +
+  facet_wrap(~ NAME, scale = "free") +
+  labs(x = "Crowd density", y = "Crime rate per 10,000 attendees") +
+  theme_bw() +
+  theme(legend.position = "none",
+        axis.text = element_text(size = 4),
+        axis.title = element_text(size = 7),
+        strip.background = element_rect(fill = "transparent"),
+        strip.text = element_text(size = 6)) 
+
+# Plot.
+density_facet_plot <- plot_grid(p_c_density, p_cr_density, nrow = 1)
+
+title_plot <- ggdraw() +
+  draw_label("Relationship between crime and crowd density at Major League Baseball games during 2018.", size = 10, hjust = 0.5)
+
+density_full_plot <- plot_grid(title_plot, density_facet_plot, nrow = 2, rel_heights = c(0.1,1))
+
+# Save.
+ggsave(plot = density_full_plot, filename = "visuals/density_facet.png", height = 12, width = 30, unit = "cm")
+
+# ================================================ #
+# Save workspace so we have this.                  #
+# save.image(file = "mlb_density_workspace.RData") #      
+# ================================================ #
+
+# Check distribution of attendance and attendance density.
+p1 <- ggplot(data = gl_stads_sub_crimes_df) +
+  geom_density(mapping = aes(attendance)) +
+  facet_wrap(~ NAME, scale = "free")
+
+p2 <- ggplot(data = gl_stads_sub_crimes_df) +
+  geom_density(mapping = aes(attend_density_n)) +
+  facet_wrap(~ NAME, scale = "free")
+
+plot_grid(p1, p2) # identical by stadium but not across stadiums.
+
+
 
