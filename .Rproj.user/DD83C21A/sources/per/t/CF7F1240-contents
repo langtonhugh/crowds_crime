@@ -204,13 +204,6 @@ main_plot <- plot_grid(p_counts, p_rates, nrow = 1)
 # Save.
 ggsave(plot = main_plot, filename = "visuals/mbl.png", height = 10, width = 25, unit = "cm")
 
-# Correlation. Note that there are some ties.
-count_test <- cor.test(gl_stads_sub_crimes_df$attendance, gl_stads_sub_crimes_df$crime_count, method = "spearman")
-rate_test  <- cor.test(gl_stads_sub_crimes_df$attendance, gl_stads_sub_crimes_df$crime_rate , method = "spearman")
-
-count_test
-rate_test
-
 # Visualize relationship by team.
 pt_counts <- ggplot(data = gl_stads_sub_crimes_df) +
   geom_point(mapping = aes(x = attendance, y = crime_count, colour = NAME), size = 0.7) +
@@ -323,15 +316,16 @@ gl_stads_sub_crimes_df <- gl_stads_sub_crimes_df %>%
 # Relationship between crowd density and crime across all stadiums.
 p_agg_density <- ggplot(data = gl_stads_sub_crimes_df) +
   geom_point(mapping = aes(x = attend_density_n, y = crime_count, colour = NAME)) +
-  labs(x = "Crown density", y = "Crime count", colour = NULL) +
+  labs(x = "Crowd density", y = "Crime count", colour = NULL) +
   theme_bw() +
   theme(legend.position = "bottom",
+        legend.text = element_text(size = 6),
         axis.text = element_text(size = 4),
-        axis.title = element_text(size = 7),
-        strip.background = element_rect(fill = "transparent"),
-        strip.text = element_text(size = 6))
-
-ggsave(plot = p_agg_density, filename = "visuals/density_total.png", height = 16, width = 16, unit = "cm")
+        axis.title = element_text(size = 7))
+        
+        
+        
+ggsave(plot = p_agg_density, filename = "visuals/density_total.png", height = 14, width = 14, unit = "cm")
 
 # Visualize for counts and rates by stadium.
 p_c_density <- ggplot(data = gl_stads_sub_crimes_df) +
@@ -390,15 +384,42 @@ ggsave(plot = density_full_plot, filename = "visuals/density_facet.png", height 
 # Make example plot of stadium footprints.
 
 # Extract crimes for LA dodgers.
-la_dodger_crimes_sf <- stads_crimes_buffers_sf %>% 
+dodge_crime_buffers_sf <- stads_crimes_buffers_sf %>% 
+  filter(stadium_name == "Dodger Stadium") %>% 
+  st_difference() %>% 
+  st_centroid() %>% 
+  st_buffer(dist = 8) %>% 
+  select(uid)
+
+# Create individual pionts of crimes.
+dodgers_crimes_sf <- stads_crimes_buffers_sf %>% 
   filter(stadium_name == "Dodger Stadium")
+
+# Aggregate point to these tiny buffers.
+dodge_locations_agg_sf <- st_intersection(dodge_crime_buffers_sf, dodgers_crimes_sf)
+
+# Aggregate crimes in each mini buffer
+dodge_crime_mini_buf_sf <- dodge_locations_agg_sf %>% 
+  group_by(uid) %>% 
+  summarise(mini_buf_count = n()) %>% 
+  ungroup() %>% 
+  as_tibble() %>% 
+  select(-geometry) %>% 
+  left_join(dodge_crime_buffers_sf) %>% 
+  st_as_sf()
+
+# Check same number of crimes.
+sum(dodge_crime_mini_buf_sf$mini_buf_count)
 
 # Plot on top of building footprints and buffer.
 g_dodger <- ggplot() +
   geom_sf(data = stads_buffers_list[[4]], col = "black") +
-  geom_sf(data = osm_result_poly_list[[4]]) +
-  geom_sf(data = osm_result_poly_clipped_list[[4]], fill = "pink", colour = "transparent", alpha = 0.7) +
-  geom_sf(data = la_dodger_crimes_sf, colour = "red", size = 0.5) +
+  geom_sf(data = osm_result_poly_list[[4]], size = 0.1, col = "darkgrey", fill = "darkgrey", alpha = 0.8) +
+  geom_sf(data = osm_result_poly_clipped_list[[4]], size = 0.1, fill = "black", colour = "black", alpha = 1) +
+  # geom_sf(data = dodge_crime_mini_buf_sf, mapping = aes(fill = mini_buf_count)) +
+  geom_sf(data = dodgers_crimes_sf, col = "red", alpha = 0.2) +
+  scale_fill_viridis_c() +
+  labs(fill = NULL) +
   theme_bw() +
   theme(axis.text = element_text(size = 4),
         axis.title = element_text(size = 7),
@@ -407,6 +428,16 @@ g_dodger <- ggplot() +
 
 # Save.
 ggsave(plot = g_dodger, filename = "visuals/dodger_map.png", height = 16, width = 16, unit = "cm")
+
+# Correlation. Note that there are some ties.
+count_test <- cor.test(gl_stads_sub_crimes_df$attend_density_n, gl_stads_sub_crimes_df$crime_count, method = "spearman")
+rate_test  <- cor.test(gl_stads_sub_crimes_df$attend_density_n, gl_stads_sub_crimes_df$crime_rate , method = "spearman")
+
+plot(gl_stads_sub_crimes_df$attend_density_n, gl_stads_sub_crimes_df$crime_count)
+
+
+count_test
+rate_test
 
 # ================================================ #
 # Save workspace so we have this.                  #

@@ -1,19 +1,19 @@
 {
     "collab_server" : "",
     "contents" : "",
-    "created" : 1604855224103.000,
+    "created" : 1604949691761.000,
     "dirty" : false,
     "encoding" : "UTF-8",
-    "folds" : "96|25|99|0|\n",
-    "hash" : "546796475",
-    "id" : "291CE3B",
-    "lastKnownWriteTime" : 1604912276,
-    "last_content_update" : 1604912276125,
+    "folds" : "",
+    "hash" : "544487772",
+    "id" : "CF7F1240",
+    "lastKnownWriteTime" : 1604949850,
+    "last_content_update" : 1604949850684,
     "path" : "~/GitHub/crowds_crime/script/MLB.R",
     "project_path" : "script/MLB.R",
     "properties" : {
-        "cursorPosition" : "365,0",
-        "scrollLine" : "0"
+        "cursorPosition" : "443,2",
+        "scrollLine" : "425"
     },
     "read_only" : false,
     "read_only_alternatives" : [
