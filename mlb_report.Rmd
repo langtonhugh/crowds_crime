@@ -47,9 +47,10 @@ knitr::include_graphics("visuals/density_facet.png")
 
 # Discussion
 
-- We provide a demonstration of how to use open data to examine the relationship between overcrowding and crime.
+- We provide a demonstration of how to use open data to examine the relationship between overcrowding and crime at sports events.
 - There is preliminary evidence to suggest that there is a relationship between crowd density and crime around Major League Baseball games on match day.
 - The variation by stadium indicates that other factors in the urban environment might be determining criminal behaviour, or mediating the relationship between overcrowding and crime (e.g. crowd control, alcohol sales, time of game).
+- Future research might also consider comparing games at _different stadiums_ (thus different building footprints) that had a _similar attendance_ figure. This would help unpick the relationship between overcrowding and crime.
 - All code to replicate this study can be found online (https://github.com/langtonhugh/crowds_crime).
 
 # References
