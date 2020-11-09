@@ -289,6 +289,7 @@ stads_buffers_list <- group_split(stads_buffers_sf, stadium_name)
 # Name elements according to other list (alphabetical).
 names(stads_buffers_list) <- names(osm_result_poly_list)
 
+# Example plot.
 plot(st_geometry(osm_result_poly_list[[7]]))
 plot(st_geometry(stads_buffers_list[[7]]), add = T, border = "red")
 
@@ -304,19 +305,33 @@ footprint_df <- footprint_list %>%
   mutate(id = 1) %>% 
   pivot_longer(cols = -id, names_to = "NAME", values_to = "area") %>% 
   select(-id) %>% 
-  rename(build_footprint = area)
+  rename(build_footprint = area) 
 
 # Join info back with the game data.
 gl_stads_sub_crimes_df <- left_join(gl_stads_sub_crimes_df, footprint_df)
 
+# Calculate total area of buffer (same for each stadium so I just use first element in list).
+buffer_area <- st_area(stads_buffers_list[[1]])
+
 # Calculate attendance density. 
 gl_stads_sub_crimes_df <- gl_stads_sub_crimes_df %>% 
-  mutate(attend_density = attendance/build_footprint,
+  mutate(area_total = buffer_area,
+         free_footprint = area_total-build_footprint,
+         attend_density = attendance/free_footprint,
          attend_density_n = as.numeric(attend_density))
 
 # Relationship between crowd density and crime across all stadiums.
-ggplot(data = gl_stads_sub_crimes_df) +
-  geom_point(mapping = aes(x = attend_density_n, y = crime_count, colour = NAME))
+p_agg_density <- ggplot(data = gl_stads_sub_crimes_df) +
+  geom_point(mapping = aes(x = attend_density_n, y = crime_count, colour = NAME)) +
+  labs(x = "Crown density", y = "Crime count", colour = NULL) +
+  theme_bw() +
+  theme(legend.position = "bottom",
+        axis.text = element_text(size = 4),
+        axis.title = element_text(size = 7),
+        strip.background = element_rect(fill = "transparent"),
+        strip.text = element_text(size = 6))
+
+ggsave(plot = p_agg_density, filename = "visuals/density_total.png", height = 16, width = 16, unit = "cm")
 
 # Visualize for counts and rates.
 p_c_density <- ggplot(data = gl_stads_sub_crimes_df) +
@@ -343,32 +358,57 @@ p_cr_density <- ggplot(data = gl_stads_sub_crimes_df) +
         strip.background = element_rect(fill = "transparent"),
         strip.text = element_text(size = 6)) 
 
-# Plot.
+# Plot nrow = 2
+density_facet_plot <- plot_grid(p_c_density, p_cr_density, nrow = 2)
+
+# Save basic plot.
+ggsave(plot = density_facet_plot, filename = "visuals/density_facet.png", height = 22, width = 16, unit = "cm")
+
+# Plot nrow = 1
 density_facet_plot <- plot_grid(p_c_density, p_cr_density, nrow = 1)
 
+# Add title.
 title_plot <- ggdraw() +
   draw_label("Relationship between crime and crowd density at Major League Baseball games during 2018.", size = 10, hjust = 0.5)
 
 density_full_plot <- plot_grid(title_plot, density_facet_plot, nrow = 2, rel_heights = c(0.1,1))
 
-# Save.
+# Save with title.
 ggsave(plot = density_full_plot, filename = "visuals/density_facet.png", height = 12, width = 30, unit = "cm")
+
+# Check distribution of attendance and attendance density.
+# p1 <- ggplot(data = gl_stads_sub_crimes_df) +
+#   geom_density(mapping = aes(attendance)) +
+#   facet_wrap(~ NAME, scale = "free")
+# 
+# p2 <- ggplot(data = gl_stads_sub_crimes_df) +
+#   geom_density(mapping = aes(attend_density_n)) +
+#   facet_wrap(~ NAME, scale = "free")
+# 
+# plot_grid(p1, p2) # identical by stadium.
+
+# Make example plot of stadium footprints.
+
+# Extract crimes for LA dodgers.
+la_dodger_crimes_sf <- stads_crimes_buffers_sf %>% 
+  filter(stadium_name == "Dodger Stadium")
+
+# Plot on top of building footprints and buffer.
+g_dodger <- ggplot() +
+  geom_sf(data = stads_buffers_list[[4]], col = "black") +
+  geom_sf(data = osm_result_poly_list[[4]]) +
+  geom_sf(data = osm_result_poly_clipped_list[[4]], fill = "pink", colour = "transparent", alpha = 0.7) +
+  geom_sf(data = la_dodger_crimes_sf, colour = "red", size = 0.5) +
+  theme_bw() +
+  theme(axis.text = element_text(size = 4),
+        axis.title = element_text(size = 7),
+        strip.background = element_rect(fill = "transparent"),
+        strip.text = element_text(size = 6)) 
+
+# Save.
+ggsave(plot = g_dodger, filename = "visuals/dodger_map.png", height = 16, width = 16, unit = "cm")
 
 # ================================================ #
 # Save workspace so we have this.                  #
-# save.image(file = "mlb_density_workspace.RData") #      
+# save.image(file = "mlb_density_workspace.RData") #
 # ================================================ #
-
-# Check distribution of attendance and attendance density.
-p1 <- ggplot(data = gl_stads_sub_crimes_df) +
-  geom_density(mapping = aes(attendance)) +
-  facet_wrap(~ NAME, scale = "free")
-
-p2 <- ggplot(data = gl_stads_sub_crimes_df) +
-  geom_density(mapping = aes(attend_density_n)) +
-  facet_wrap(~ NAME, scale = "free")
-
-plot_grid(p1, p2) # identical by stadium but not across stadiums.
-
-
-

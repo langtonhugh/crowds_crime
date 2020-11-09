@@ -1,0 +1,54 @@
+---
+title: 'Overcrowding and crime: a case study of Major League Baseball games during 2018.'
+author:
+  - Samuel Langton (University of Leeds)
+  - Reka Solymosi (University of Manchester)
+output:
+  pdf_document:
+    latex_engine: xelatex
+    number_sections: yes
+bibliography: refs.bib
+csl: apa.csl
+header-includes: \usepackage{float}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Background
+
+- Issues around overcrowding and crime in urban environments has been acknowledged for some time [@freedman1975crowding].
+- Evidence suggests that the more 'strangers' in an area, the more crime trends to occur, although this can vary by crime type [@jarrell1990transient].
+- Overcrowded areas, such as around public transport stops, are thought to mask deviant behaviour and thus provide opportunities for crime [@loukaitou1999hot].
+- Existing studies have found that sports events, such as baseball games, can incite criminal behaviour, especially around the immediate vicinity of the stadium [@mares2019major].
+- Here, we demonstrate how to examine the relationship between crowd density and crime at Major League Baseball games during 2018 using open data sources.
+
+# Data
+
+- Open Street Map API.
+- Open police-recorded crime data [@ashby2018crime].
+- Game logs from Retrosheet.
+
+```{r lamap, fig.pos = 'H', message=F, comment=F, warning=F, fig.cap = "Building footprints around the LA Dogder stadium including 1-mile buffer and geocoded crime locations during 2018."}
+knitr::include_graphics("visuals/dodger_map.png")
+```
+
+# Preliminary findings
+
+- There is a clear relationship between game attendance and crime.
+- To provide a meaningful interpretation, we adjust attendance figures for the built environment, providing a measure of crowd density.
+- This demonstrates that there is a positive association between crowd density and the volume of crime occurring in and around stadiums on match days.
+- There is a negative association between crowd density and crime _rates_ (adjusted for attendees), noting potential issues around rate measure.
+
+```{r facet, fig.pos = 'H', message=F, comment=F, warning=F, fig.cap = "Relationship between crowd density and crime (counts and rates) by stadium for Major League Baseball games during 2018."}
+knitr::include_graphics("visuals/density_facet.png")
+```
+
+# Discussion
+
+- We provide a demonstration of how to use open data to examine the relationship between overcrowding and crime.
+- There is preliminary evidence to suggest that there is a relationship between crowd density and crime around Major League Baseball games on match day.
+- All code to replicate this study can be found online (https://github.com/langtonhugh/crowds_crime).
+
+# References
