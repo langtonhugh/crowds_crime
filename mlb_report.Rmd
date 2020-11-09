@@ -36,10 +36,10 @@ knitr::include_graphics("visuals/dodger_map.png")
 
 # Preliminary findings
 
-- There is a clear relationship between game attendance and crime.
-- To provide a meaningful interpretation, we adjust attendance figures for the built environment, providing a measure of crowd density.
-- This demonstrates that there is a positive association between crowd density and the volume of crime occurring in and around stadiums on match days.
-- There is a negative association between crowd density and crime _rates_ (adjusted for attendees), noting potential issues around rate measure.
+- There is evidence of a relationship between game crowd attendance and crime.
+- To give a meaningful interpretation, we adjust attendance figures for the built environment, providing a measure of crowd density.
+- This demonstrates that there is a positive association between crowd density and the volume of crime occurring in and around stadiums on match days, although this does seem to vary by stadium.
+- There is a negative association between crowd density and crime _rates_ (adjusted for attendees), noting potential issues around rate measure. Again, this does seem to vary by stadium.
 
 ```{r facet, fig.pos = 'H', message=F, comment=F, warning=F, fig.cap = "Relationship between crowd density and crime (counts and rates) by stadium for Major League Baseball games during 2018."}
 knitr::include_graphics("visuals/density_facet.png")
@@ -49,6 +49,7 @@ knitr::include_graphics("visuals/density_facet.png")
 
 - We provide a demonstration of how to use open data to examine the relationship between overcrowding and crime.
 - There is preliminary evidence to suggest that there is a relationship between crowd density and crime around Major League Baseball games on match day.
+- The variation by stadium indicates that other factors in the urban environment might be determining criminal behaviour, or mediating the relationship between overcrowding and crime (e.g. crowd control, alcohol sales, time of game).
 - All code to replicate this study can be found online (https://github.com/langtonhugh/crowds_crime).
 
 # References

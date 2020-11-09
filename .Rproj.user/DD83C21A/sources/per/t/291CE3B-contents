@@ -333,12 +333,12 @@ p_agg_density <- ggplot(data = gl_stads_sub_crimes_df) +
 
 ggsave(plot = p_agg_density, filename = "visuals/density_total.png", height = 16, width = 16, unit = "cm")
 
-# Visualize for counts and rates.
+# Visualize for counts and rates by stadium.
 p_c_density <- ggplot(data = gl_stads_sub_crimes_df) +
   theme_bw() +
   geom_point(mapping = aes(x = attend_density_n, y = crime_count, colour = NAME), size = 0.7) +
   facet_wrap(~ NAME, scale = "free") +
-  labs(x = "Crowd density", y = "Crime count") +
+  labs(x = NULL, y = "Crime count") +
   theme_bw() +
   theme(legend.position = "none",
         axis.text = element_text(size = 4),
