@@ -38,11 +38,11 @@ knitr::opts_chunk$set(echo = FALSE)
 - There is a negative association between crowd density and crime _rates_ (adjusted for attendees), noting potential issues around rate measure. Again, this does seem to vary by stadium.
 - Visual inspection of geocoded crime locations suggests that match day crimes tended to occur in enclosed urban spaces (e.g. between buildings) in which crowd density would be higher, rather than open spaces (e.g. car park surrounding stadium) where people would be spread out. This would benefit from further analysis and comes with the caveat of geocoding inaccuracies in police records [@ashby2018crime].
 
-```{r lamap, fig.pos = 'H', message=F, comment=F, warning=F, fig.cap = "Building footprints around the LA Dogder stadium including 1-mile buffer and geocoded crime locations during 2018."}
+```{r lamap, fig.pos = 'H', message=F, comment=F, warning=F, fig.cap = "Building footprints around the LA Dodger stadium including 1-mile buffer and geocoded crime locations on match days during 2018."}
 knitr::include_graphics("visuals/dodger_map.png")
 ```
 
-```{r facet, fig.pos = 'H', message=F, comment=F, warning=F, fig.cap = "Relationship between crowd density and crime (counts and rates) by stadium for Major League Baseball games during 2018."}
+```{r facet, fig.pos = 'H', message=F, comment=F, warning=F, fig.cap = "Relationship between crowd density and crime (counts and rates) by stadium for Major League Baseball match days during 2018."}
 knitr::include_graphics("visuals/density_facet.png")
 ```
 
