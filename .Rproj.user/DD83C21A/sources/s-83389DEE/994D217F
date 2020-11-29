@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1606644729846.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2374897495",
+    "id" : "994D217F",
+    "lastKnownWriteTime" : 1606645300,
+    "last_content_update" : 1606645300853,
+    "path" : "~/GitHub/crowds_crime/script/la_crime.R",
+    "project_path" : "script/la_crime.R",
+    "properties" : {
+        "cursorPosition" : "6,14",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
