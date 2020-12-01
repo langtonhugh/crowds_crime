@@ -10,7 +10,7 @@ scrape baseball from this site maybe (click on boxscore next to each game) https
 ***NHL***
 all nhl attendances here https://www.hockey-reference.com/leagues/NHL_2020_games.html
 
-***Retrosheet Baseball ***
+***Retrosheet Baseball***
 https://www.retrosheet.org/gamelogs/index.html
 
 e.g. GL2018
