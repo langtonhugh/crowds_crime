@@ -1,7 +1,0 @@
-library(readr)
-library(lubridate)
-
-crime_df <- read_csv("data/Crime_Data_from_2020_to_Present.csv")
-
-crime_june_df <- crime_df %>%
-  mutate(`DATE`)

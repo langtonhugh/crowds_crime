@@ -17,23 +17,21 @@ library(purrr)
 cali_df <- read_csv("data/cali_nhood_safegraph.csv")
 
 # grab the variables that are most interesting.
-cali_sub_df <- cali_df %>% 
-  select(area,
-         raw_stop_counts, raw_device_counts,
-         stops_by_day, stops_by_each_hour, 
-         popularity_by_hour_monday,
-         popularity_by_hour_tuesday,
-         popularity_by_hour_wednesday,
-         popularity_by_hour_thursday,
-         popularity_by_hour_friday,
-         popularity_by_hour_saturday,
-         popularity_by_hour_sunday)
+# cali_sub_df <- cali_df %>% 
+#   select(area,
+#          raw_stop_counts, raw_device_counts,
+#          stops_by_day, stops_by_each_hour, 
+#          popularity_by_hour_monday,
+#          popularity_by_hour_tuesday,
+#          popularity_by_hour_wednesday,
+#          popularity_by_hour_thursday,
+#          popularity_by_hour_friday,
+#          popularity_by_hour_saturday,
+#          popularity_by_hour_sunday)
 
-write_csv(x = cali_sub_df, path = "data/cali_subset_nhood_safegraph.csv")
+# write_csv(x = cali_sub_df, path = "data/cali_subset_nhood_safegraph.csv")
 
 # separate(col = popularity_by_hour_monday, sep = ",", into = paste0("t", 1:24)) 
-
-
 
 # cali_sub_df <- cali_sub_df %>% 
 #   mutate(t1 = gsub(x = cali_sub_df$t1, pattern = "\\[", replacement = ""),
