@@ -109,3 +109,68 @@ cali_df <- read_csv("data/cali_nhood_safegraph.csv")
 # la_safe_daily_sf <- left_join(la_sf, la_long_df)
 # 
 # # animate
+
+
+
+safe_df <- read_csv("data/cali_nhood_safegraph.csv")
+
+hour_stops_df <- safe_df %>% 
+  select(area, stops_by_each_hour) %>% 
+  separate(col = stops_by_each_hour, sep = ",", into = paste0("h", 1:720))
+
+hour_stops_clean_df <- hour_stops_df %>% 
+  mutate(h1   = gsub(x = hour_stops_df$h1, pattern = "\\[", replacement = ""),
+         h720 = gsub(x = hour_stops_df$h720, pattern = "\\]", replacement = ""))
+
+hour_stops_clean_long_df <- hour_stops_clean_df %>% 
+  pivot_longer(cols = -area, names_to = "hour", values_to = "count") #%>% 
+# mutate(hour_num = gsub(x = hour_stops_clean_df$hour, pattern = "h", replacement = "")) 
+
+test <- hour_stops_clean_long_df %>% 
+  mutate(hour_num = gsub(x = hour_stops_clean_long_df$hour, pattern = "h", replacement = "")) %>% 
+  mutate(count = as.numeric(count)) %>% 
+  group_by(hour) %>% 
+  summarise(sum_foot = sum(count)) 
+
+
+options(scipen = 9999999)
+
+ggplot(data = test) +
+  geom_line(mapping = aes(x = hour, y = sum_foot, group = 1)) +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())
+
+test2 <- test %>% 
+  mutate(sum_foot2 = ifelse(test = test$sum_foot > 600000, yes = median(test$sum_foot),
+                            no = test$sum_foot)) 
+ggplot(data = test2) +
+  geom_line(mapping = aes(x = hour, y = sum_foot2, group = 1)) 
+
+
+
+
+
+
+
+
+
+
+
+
+
+days_vec <- c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+
+test <- hour_stops_clean_long_df %>% 
+  mutate(hour_24 = rep(1:24, nrow(hour_stops_clean_long_df)/24))
+
+temp_list <- group_split(test, area)
+
+example <- temp_list[[1]]
+
+days_char <- as.character(1:30)
+
+hello <- example %>%
+  mutate(tripletID = paste(plate, gl(n()/3, 3), sep = "."))
+
+#===================================================
+

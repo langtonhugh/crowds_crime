@@ -1,0 +1,10 @@
+library(readr)
+
+setwd("C:/Users/langt/Documents/GitHub/crowds_hackathon/data")
+
+df1 <- read_csv("cali_nhood_safegraph.csv")
+df2 <- read_csv("la_cb.csv")
+df3 <- read_csv("la_crime_june.csv")
+df4 <- read_csv("retrosheet_gl_2018.csv")
+df5 <- read_csv("stadium_coords.csv")
+df6 <- read_csv("us_crime_2018.csv")
