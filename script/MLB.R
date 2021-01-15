@@ -120,8 +120,14 @@ usa_sf <- st_transform(usa_sf, 4326)
 # Transform stadiums, crimes and USA to a projected CRS (https://epsg.io/2163).
 # Note: what is the impact of choosing a different projection?
 stads_sf      <- st_transform(stads_sf, 2163)
+
+# for mac, or any older gdal/proj version you might need this (see github issue: https://github.com/r-spatial/sf/issues/1419):
+st_crs(crimes_sub_sf) = 4326 # and ignore the subsequent warning
+st_crs(crimes_sub_sf$geometry) <- 4326
+
 crimes_sub_sf <- st_transform(crimes_sub_sf, 2163)
-usa_sf        <- st_transform(usa_sf, 2163)
+
+usa_sf <- st_transform(usa_sf, 2163)
 
 # Visual inspection.
 # ggplot() +
@@ -137,7 +143,7 @@ stads_buffers_sf <- st_buffer(stads_sf, dist = 1609)
 # st_write(obj = stads_buffers_sf, dsn = "data/stads_buffers.shp")
 
 # Visual inspection of first observation.
-# ggplot() + 
+# ggplot() +
 #   geom_sf(data = slice(stads_sf, 1), col = "red") +
 #   geom_sf(data = slice(stads_buffers_sf, 1), fill = "transparent")
 
@@ -146,12 +152,14 @@ stads_crimes_buffers_sf <- st_intersection(stads_buffers_sf, crimes_sub_sf)
 
 # Aggregate by stadium and by day.
 stads_crimes_df <- stads_crimes_buffers_sf %>% 
+  filter(offense_group%in% c("assault offenses", "larceny/theft offenses")) %>% # i filtered here for larceny/theft, can discuss tho!
   as_tibble() %>% 
   group_by(stadium_name, date_ymd) %>% 
   summarise(crime_count = n()) %>% 
   ungroup() %>% 
   complete(stadium_name, date_ymd, fill = list(crime_count = 0))
   
+
 # Check frequencies across all days.
 # ggplot(data = stads_crimes_df) +
 #   geom_histogram(mapping = aes(crime_count), bins = 30)
@@ -315,7 +323,7 @@ gl_stads_sub_crimes_df <- gl_stads_sub_crimes_df %>%
 
 # Relationship between crowd density and crime across all stadiums.
 p_agg_density <- ggplot(data = gl_stads_sub_crimes_df) +
-  geom_point(mapping = aes(x = attend_density_n, y = crime_count, colour = NAME)) +
+  geom_jitter(mapping = aes(x = attend_density_n, y = crime_count, colour = NAME)) + # changed to jitter because looked not so nice as the other one due to fewer crimes... 
   labs(x = "Crowd density", y = "Crime count", colour = NULL) +
   theme_bw() +
   theme(legend.position = "bottom",
@@ -443,3 +451,16 @@ rate_test
 # Save workspace so we have this.                  #
 # save.image(file = "mlb_density_workspace.RData") #
 # ================================================ #
+
+
+
+
+# Is density better than population count to predict crime?
+
+count_mod <- glm(crime_count ~ attendance, data = gl_stads_sub_crimes_df, family = "poisson")
+summary(count_mod)
+
+density_mod <- glm(crime_count ~ attend_density_n, data = gl_stads_sub_crimes_df, family = "poisson")
+summary(density_mod)
+
+
