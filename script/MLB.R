@@ -52,11 +52,6 @@ crimes_sf <- get_crime_data(
   output = "sf"
 ) 
 
-# ============================================= #
-# Save workspace so we have this.               #
-# save.image(file = "mlb_workspace.RData")      #
-# ============================================= #
-
 # Check punctuation of retrosheet city names.
 unique(gl_2018_pitch_df$CITY)
 
@@ -122,8 +117,8 @@ usa_sf <- st_transform(usa_sf, 4326)
 stads_sf      <- st_transform(stads_sf, 2163)
 
 # for mac, or any older gdal/proj version you might need this (see github issue: https://github.com/r-spatial/sf/issues/1419):
-st_crs(crimes_sub_sf) = 4326 # and ignore the subsequent warning
-st_crs(crimes_sub_sf$geometry) <- 4326
+# st_crs(crimes_sub_sf) = 4326 # and ignore the subsequent warning
+# st_crs(crimes_sub_sf$geometry) <- 4326
 
 crimes_sub_sf <- st_transform(crimes_sub_sf, 2163)
 
@@ -134,7 +129,7 @@ usa_sf <- st_transform(usa_sf, 2163)
 #   geom_sf(data = usa_sf) +
 #   geom_sf(data = stads_sf)
 
-# Create buffers around stadiums.
+# Create 1-mile buffers around stadiums.
 stads_buffers_sf <- st_buffer(stads_sf, dist = 1609)
 
 # Save for inspection in QGIS.
@@ -152,17 +147,16 @@ stads_crimes_buffers_sf <- st_intersection(stads_buffers_sf, crimes_sub_sf)
 
 # Aggregate by stadium and by day.
 stads_crimes_df <- stads_crimes_buffers_sf %>% 
-  filter(offense_group%in% c("assault offenses", "larceny/theft offenses")) %>% # i filtered here for larceny/theft, can discuss tho!
+  filter(offense_group %in% c("assault offenses", "larceny/theft offenses")) %>% # filter assault and larceny/theft.
   as_tibble() %>% 
   group_by(stadium_name, date_ymd) %>% 
   summarise(crime_count = n()) %>% 
   ungroup() %>% 
   complete(stadium_name, date_ymd, fill = list(crime_count = 0))
-  
 
 # Check frequencies across all days.
-# ggplot(data = stads_crimes_df) +
-#   geom_histogram(mapping = aes(crime_count), bins = 30)
+ggplot(data = stads_crimes_df) +
+  geom_histogram(mapping = aes(crime_count), bins = 30) 
 
 # Rename variables for join.
 stads_crimes_df <- stads_crimes_df %>% 
@@ -290,11 +284,35 @@ stads_buffers_list <- group_split(stads_buffers_sf, stadium_name)
 # Name elements according to other list (alphabetical).
 names(stads_buffers_list) <- names(osm_result_poly_list)
 
-# Example plot.
-plot(st_geometry(osm_result_poly_list[[7]]))
-plot(st_geometry(stads_buffers_list[[7]]), add = T, border = "red")
+# Example plot. 
+plot(st_geometry(osm_result_poly_list[[10]]))
+plot(st_geometry(stads_buffers_list[[10]]), add = T, border = "red")
 
-# Run intersection on each element pairs of these lists. Warnings is standard.
+# Check validity. This may change over time due to people's edits.
+validity_check <- lapply(osm_result_poly_list, st_is_valid)
+
+# Tabulate. For me, there is just at the Yankee Stadium II - the tenth element in the list.
+lapply(validity_check, table)
+
+# Resolve the invalid geometry.
+osm_result_poly_list[[10]] <- st_make_valid(osm_result_poly_list[[10]])
+
+# Check it is resolved. Yes.
+table(st_is_valid(osm_result_poly_list[[10]]))
+
+# We still get some invalid warnings with the intersections below, so we try a buffer hack.
+# https://gis.stackexchange.com/questions/163445/getting-topologyexception-input-geom-1-is-invalid-which-is-due-to-self-intersec
+osm_result_poly_list <- lapply(osm_result_poly_list, function(x){st_buffer(x = x, dist = 0)})
+
+# ============================================= #
+# Save workspace so we have this.               #
+# save.image(file = "mlb_workspace.RData")      #
+# ============================================= #
+
+# Load workspace.
+load(file = "mlb_workspace.RData")
+
+# Run intersection on each element pairs of these lists.
 osm_result_poly_clipped_list <- map2(stads_buffers_list, osm_result_poly_list, st_intersection)
 
 # Calculate areal building footprint for each stadium buffer.
@@ -387,80 +405,105 @@ ggsave(plot = density_full_plot, filename = "visuals/density_facet.png", height 
 #   geom_density(mapping = aes(attend_density_n)) +
 #   facet_wrap(~ NAME, scale = "free")
 # 
-# plot_grid(p1, p2) # identical by stadium.
+# plot_grid(p1, p2) 
 
-# Make example plot of stadium footprints.
+# Make example plot of stadium footprints. We use Wrigley Field and Dogers Stadium
+# as they are quite different in terms of how built-up they are.
 
-# Extract crimes for LA dodgers.
-dodge_crime_buffers_sf <- stads_crimes_buffers_sf %>% 
-  filter(stadium_name == "Dodger Stadium") %>% 
-  st_difference() %>% 
-  st_centroid() %>% 
-  st_buffer(dist = 8) %>% 
-  select(uid)
-
-# Create individual pionts of crimes.
-dodgers_crimes_sf <- stads_crimes_buffers_sf %>% 
+# Pull crimes for each.
+dodge_crimes_sf <- stads_crimes_buffers_sf %>% 
   filter(stadium_name == "Dodger Stadium")
 
-# Aggregate point to these tiny buffers.
-dodge_locations_agg_sf <- st_intersection(dodge_crime_buffers_sf, dodgers_crimes_sf)
+wrigley_crimes_sf <- stads_crimes_buffers_sf %>% 
+  filter(stadium_name == "Wrigley Field")
 
-# Aggregate crimes in each mini buffer
-dodge_crime_mini_buf_sf <- dodge_locations_agg_sf %>% 
-  group_by(uid) %>% 
-  summarise(mini_buf_count = n()) %>% 
-  ungroup() %>% 
-  as_tibble() %>% 
-  select(-geometry) %>% 
-  left_join(dodge_crime_buffers_sf) %>% 
-  st_as_sf()
+# Subset all buildings for each.
+dodge_build_sf <- osm_result_poly_list[["Dodger Stadium"]]
+wrigley_build_sf <- osm_result_poly_list[["Wrigley Field"]]
 
-# Check same number of crimes.
-sum(dodge_crime_mini_buf_sf$mini_buf_count)
+# Subset all buildings clipped to the buffer for each.
+dodge_build_buf_sf <- osm_result_poly_clipped_list[["Dodger Stadium"]]
+wrigley_build_buf_sf <- osm_result_poly_clipped_list[["Wrigley Field"]]
 
-# Plot on top of building footprints and buffer.
-g_dodger <- ggplot() +
-  geom_sf(data = stads_buffers_list[[4]], col = "black") +
-  geom_sf(data = osm_result_poly_list[[4]], size = 0.1, col = "darkgrey", fill = "darkgrey", alpha = 0.8) +
-  geom_sf(data = osm_result_poly_clipped_list[[4]], size = 0.1, fill = "black", colour = "black", alpha = 1) +
-  # geom_sf(data = dodge_crime_mini_buf_sf, mapping = aes(fill = mini_buf_count)) +
-  geom_sf(data = dodgers_crimes_sf, col = "red", alpha = 0.2) +
+# Subset actual buffer for each.
+dodge_buf_sf <- stads_buffers_list[["Dodger Stadium"]]
+wrigley_buf_sf <- stads_buffers_list[["Wrigley Field"]]
+
+# Plot Guaranteed Rate Field.
+dodge_map_gg <- ggplot() +
+  geom_sf(data = dodge_buf_sf, col = "black") +
+  geom_sf(data = dodge_build_sf, size = 0.1, col = "darkgrey", fill = "darkgrey", alpha = 0.8) +
+  geom_sf(data = dodge_build_buf_sf, size = 0.1, fill = "black", colour = "black", alpha = 1) +
+  geom_sf(data = dodge_crimes_sf, col = "red", alpha = 0.2) +
   scale_fill_viridis_c() +
-  labs(fill = NULL) +
+  labs(fill = NULL, title = "Dodgers Stadium, Los Angeles") +
   theme_bw() +
-  theme(axis.text = element_text(size = 4),
+  theme(plot.title = element_text(size = 9),
+        axis.text = element_text(size = 4),
         axis.title = element_text(size = 7),
         strip.background = element_rect(fill = "transparent"),
         strip.text = element_text(size = 6)) 
 
+# Plot wrigleyfman Stadium.
+wrigley_map_gg <- ggplot() +
+  geom_sf(data = wrigley_buf_sf, col = "black") +
+  geom_sf(data = wrigley_build_sf, size = 0.1, col = "darkgrey", fill = "darkgrey", alpha = 0.8) +
+  geom_sf(data = wrigley_build_buf_sf, size = 0.1, fill = "black", colour = "black", alpha = 1) +
+  geom_sf(data = wrigley_crimes_sf, col = "red", alpha = 0.2) +
+  scale_fill_viridis_c() +
+  labs(fill = NULL, title = "Wrigley Field, Chicago") +
+  theme_bw() +
+  theme(plot.title = element_text(size = 9),
+        axis.text = element_text(size = 4),
+        axis.title = element_text(size = 7),
+        strip.background = element_rect(fill = "transparent"),
+        strip.text = element_text(size = 6)) 
+
+# Arrange.
+maps_plot <- plot_grid(dodge_map_gg, wrigley_map_gg, nrow = 2)
+
 # Save.
-ggsave(plot = g_dodger, filename = "visuals/dodger_map.png", height = 16, width = 16, unit = "cm")
+ggsave(plot = maps_plot, filename = "visuals/dodge_wrigley_maps.png", height = 26, width = 16, unit = "cm")
 
-# Correlation. Note that there are some ties.
+# Correlation test. Note that there are some ties.
 count_test <- cor.test(gl_stads_sub_crimes_df$attend_density_n, gl_stads_sub_crimes_df$crime_count, method = "spearman")
-rate_test  <- cor.test(gl_stads_sub_crimes_df$attend_density_n, gl_stads_sub_crimes_df$crime_rate , method = "spearman")
-
 plot(gl_stads_sub_crimes_df$attend_density_n, gl_stads_sub_crimes_df$crime_count)
-
-
 count_test
-rate_test
 
 # ================================================ #
 # Save workspace so we have this.                  #
 # save.image(file = "mlb_density_workspace.RData") #
+load(file = "mlb_density_workspace.RData") 
 # ================================================ #
 
+# Distribution of dependent variables.
+ggplot(data = gl_stads_sub_crimes_df) +
+  geom_density(mapping = aes(x = crime_count))
 
-
+# Check log.
+ggplot(data = gl_stads_sub_crimes_df) +
+  geom_density(mapping = aes(x = log(crime_count)))
 
 # Is density better than population count to predict crime?
 
-count_mod <- glm(crime_count ~ attendance, data = gl_stads_sub_crimes_df, family = "poisson")
-summary(count_mod)
+# Scientific notation off to see full results.
+options(scipen=99999)
 
-density_mod <- glm(crime_count ~ attend_density_n, data = gl_stads_sub_crimes_df, family = "poisson")
-summary(density_mod)
+# Poisson on raw counts.
+count_pois_model <- glm(crime_count ~ attendance, data = gl_stads_sub_crimes_df, family = "poisson")
+summary(count_pois_model)
+
+density_pois_model <- glm(crime_count ~ attend_density_n, data = gl_stads_sub_crimes_df, family = "poisson")
+summary(density_pois_model)
+
+# OLS on the log count.
+count_ols_model <- lm(log(crime_count) ~ attendance, data = gl_stads_sub_crimes_df)
+summary(count_ols_model)
+
+density_ols_model <- lm(log(crime_count) ~ attend_density_n, data = gl_stads_sub_crimes_df)
+summary(density_ols_model)
+
+# Across AIC and R2 respectively, the density measure performs better than the attendance measure.
+
 
 
