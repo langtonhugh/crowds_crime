@@ -304,14 +304,6 @@ table(st_is_valid(osm_result_poly_list[[10]]))
 # https://gis.stackexchange.com/questions/163445/getting-topologyexception-input-geom-1-is-invalid-which-is-due-to-self-intersec
 osm_result_poly_list <- lapply(osm_result_poly_list, function(x){st_buffer(x = x, dist = 0)})
 
-# ============================================= #
-# Save workspace so we have this.               #
-# save.image(file = "mlb_workspace.RData")      #
-# ============================================= #
-
-# Load workspace.
-load(file = "mlb_workspace.RData")
-
 # Run intersection on each element pairs of these lists.
 osm_result_poly_clipped_list <- map2(stads_buffers_list, osm_result_poly_list, st_intersection)
 
@@ -476,7 +468,7 @@ count_test
 load(file = "mlb_density_workspace.RData") 
 # ================================================ #
 
-# Distribution of dependent variables.
+# Distribution of dependent variable.
 ggplot(data = gl_stads_sub_crimes_df) +
   geom_density(mapping = aes(x = crime_count))
 
@@ -484,26 +476,37 @@ ggplot(data = gl_stads_sub_crimes_df) +
 ggplot(data = gl_stads_sub_crimes_df) +
   geom_density(mapping = aes(x = log(crime_count)))
 
+# Create dummies for control (not required - used for checks).
+gl_stads_sub_crimes_df <- gl_stads_sub_crimes_df %>% 
+  fastDummies::dummy_columns(select_columns = "NAME")
+
 # Is density better than population count to predict crime?
 
 # Scientific notation off to see full results.
-options(scipen=99999)
+options(scipen=99999
 
-# Poisson on raw counts.
-count_pois_model <- glm(crime_count ~ attendance, data = gl_stads_sub_crimes_df, family = "poisson")
-summary(count_pois_model)
+# Models 1: attendance and attendance density as IV.
+m1a <- glm(crime_count ~ attendance, data = gl_stads_sub_crimes_df, family = "poisson")
+summary(m1a)
 
-density_pois_model <- glm(crime_count ~ attend_density_n, data = gl_stads_sub_crimes_df, family = "poisson")
-summary(density_pois_model)
+m1b <- glm(crime_count ~ attend_density_n, data = gl_stads_sub_crimes_df, family = "poisson")
+summary(m1b)
 
-# OLS on the log count.
-count_ols_model <- lm(log(crime_count) ~ attendance, data = gl_stads_sub_crimes_df)
-summary(count_ols_model)
+m1c <- lm(log(crime_count) ~ attendance, data = gl_stads_sub_crimes_df)
+summary(m1c)
 
-density_ols_model <- lm(log(crime_count) ~ attend_density_n, data = gl_stads_sub_crimes_df)
-summary(density_ols_model)
+m1d <- lm(log(crime_count) ~ attend_density_n, data = gl_stads_sub_crimes_df)
+summary(m1d)
 
-# Across AIC and R2 respectively, the density measure performs better than the attendance measure.
+# Models 2: controlling for stadium and interaction.
+m2a <- glm(crime_count ~ attendance + attendance*NAME, data = gl_stads_sub_crimes_df, family = "poisson")
+summary(m2a)
 
+m2b <- glm(crime_count ~ attend_density_n + attend_density_n*NAME, data = gl_stads_sub_crimes_df, family = "poisson")
+summary(m2b)
 
+m2c <- lm(log(crime_count) ~ attendance + attendance*NAME, data = gl_stads_sub_crimes_df)
+summary(m2c)
 
+m2d <- lm(log(crime_count) ~ attend_density_n + attend_density_n*NAME, data = gl_stads_sub_crimes_df)
+summary(m2d)
