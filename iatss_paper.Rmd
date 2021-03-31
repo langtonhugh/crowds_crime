@@ -1,0 +1,35 @@
+---
+title: "Report on Open Research Hackathon Event: Exploring the Relationship between Crowds, Safety and Crime"
+author: "Reka Solymosi, Samuel Langton, Taku Fujiyama"
+bibliography: refs.bib
+csl: apa.csl
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Background
+
+We know that crowded environments can be unsafe. For instance, crime levels increase in and around sports stadiums when attendees flock to attend events [@kurland2014offenses]. Facilities which attract high ambient populations, such transit nodes (e.g. bus stations), are known to produce criminogenic hotspots [@ceccato2015geography]. Crowding on street corners has been found to facilitate pickpocketing [@levine1986crime], and in the reverse causal direction, _restrictions_ on crowding and population mobility have been identified as the leading cause of the crime drop witnessed during the COVID-19 pandemic lockdown [@halford2020crime].
+
+That said, the relationship is not clear-cut. While transit stations might be criminogenic places on aggregate, there is considerable temporal variation to these patterns [@irvin2015spatio]. Passengers often feel most safe, and at a minimal risk of being victimized, when public transport is busy [@newton2004crime]. Out on the street, pedestrians passing-by potential targets can create 'eyes on the street' which deter victimization and reduce criminal opportunity [@cozens2011urban]. The density of pedestrians in public spaces has been found to decrease fear of crime, but only to a threshold, at which point pedestrian density can be detrimental to feelings of safety [@tchinda2020paradox].
+
+The notion that crowding impacts on human behavior is not new, and it is certainly not restricted to geography or criminology disciplines. The impact of crowding on human behavior has been examined in psychology for some time [@freedman1975crowding; @stokols1972distinction]. Here, findings point towards a potential relationship with crime. For instance, the invasion of private space (e.g. high crowd density, crossing someone's path) has been found to prompt negative emotional responses, such as aggression [@engelniederhammer2019crowding]. In policing and event management, unsuitable interior architecture (e.g. the placement of exit and entry doors) in nightclubs has been found to produce sub-optimal pedestrian flows, which turn facilitate overcrowding and aggressive behavior [@macintyre1997danger].
+
+To contribute to this growing (but incomplete) evidence-base, we organized an online event, bringing together students and researchers from a diverse array of backgrounds and academic disciplines. Exploiting novel sources of open data, we organized a hackathon event ‘Exploring the Relationship between Crowds, Safety and Crime’ in collaboration with the University of Manchester and the International Association of Traffic Safety Sciences. In this paper, we summarize the design, format and key findings from this event to (1) actively contribute to scientific advancement in the field, and (2) provide a 'proof of concept' for wider usage in crime and safety research.
+
+## Hackathon design
+
+The 2-day event, which was fully online due to the Covid-19 pandemic, took place in December 2020 and was attended by 20 participants, who were recruited using the organiser’s mailing lists and other channels. The participants consisted of doctoral students and postdocs but also included secondary school students as well as those from other countries. They were unpaid, but small prizes (amazon vouchers) were given at the end of the event. In addition to lab sessions (where participants analysed the data) and opening and concluding talks, the programme consisted of short courses on basic programming and data handling skills as well as special lectures by subject experts to keep participants engaged throughout the programme. We also allocated one facilitator for each of the three participant groups. To assist the data analysis, the organisers had collected open data for potential use before the event, but the participants could choose other datasets as well. 
+
+## Outputs
+
+The outputs of the three teams were all at a good level. Two teams investigated the relationship between attendance and crime at Major League Baseball games, while the other modelled the relationship between footfall counts and vehicle crime over the course of a typical day. They were shared between the participants and were made available for further investigations by any party.
+
+# Conclusions
+
+We believe that this Open Research format could be used widely. Use of open data as well as collaborative working on the internet would remove barriers attached to traditional collaborative research.  
+
+# References
