@@ -1,0 +1,8 @@
+Description,Source
+Police-recorded crime incidents during June 2020 in Los Angeles,Los Angeles open data archives.
+Police-recorded crime incidents in 16 major US cities during 2018.,"R package crimedata (Ashby, 2018)."
+Major League Baseball game logs for 2018.,Retrosheet website.
+Stadium coordinates for Major League Baseball stadiums in US crime data cities.,Open Street Map API.
+Shapefile of census block groups in California.,Government open data portal.
+List of census block groups nested within Los Angeles.,Government open data portal.
+Footfall counts in California during June 2020 at census block group level.,Safegraph website.
