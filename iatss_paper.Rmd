@@ -32,7 +32,7 @@ The hackathon was held over two days in December, 2020. Due to COVID-19 social d
 
 We designed the programme so that the hackathon served as both a substantive research activity and an educational tool for participants. The educational component included a range of parallel workshops which people could choose from, including introduction to Application Programming Interfaces (API), introduction to Python, introduction to R, access to open police-recorded crime data, and an introduction to GitHub and version control. Two guest speakers provided lectures on topics on their respective expertise, namely, Dr Taku Fujiyama on crowding, traffic density and safety, and Dr Andrew Newton on theoretical and empirical research on 'busyness' from a crime and place perspective. These activities served to extend attendees' existing expertise, but also to ensure that less experienced participants could actively contribute to the hackathon.
 
-For the research component, attendees were divided into teams according to their research background. Prior to the hackathon, those who registered were sent a questionnaire to gauge their research interests and experience with software (e.g. GIS, R). Three teams were manually selected to ensure diversity and balance based on these answers. Each team was tasked with exploring the topic of 'crowds, safety and crime'. We let groups pick their own research questions, drawing upon their own research backgrounds and inspired by the educational workshops and guest lectures during the hackathon.
+For the research component, attendees were divided into teams according to their research background. Prior to the hackathon, those who registered were sent a questionnaire to gauge their research interests and experience with software (e.g. GIS, R). Three teams were manually selected to ensure diversity and balance based on these answers. Each team was tasked with exploring the topic of 'crowds, safety and crime'. We let groups pick their own research questions, drawing upon their own research backgrounds and inspired by the educational workshops and guest lectures during the hackathon. Teams could communicate with one another and the organisers via a dedicated Slack through the two days.
 
 ### Data
 
@@ -67,6 +67,8 @@ Each team approached the research component of the hackathon uniquely. This demo
 
 ### Team 1
 
+Need to get slides.
+
 ### Team 2
 
 The second team focused on crime during match days for the LA Dodgers. They hypothesised that, not only would attendance correlate with crime, but that the _result_ of the game (i.e. whether the LA Dodgers won or not) would factor into this relationship. The team also expected this relationship to vary by crime type, reflecting the unique opportunity structures of different offences. For instance, a an LA Dodgers loss may result in higher rates of disorderly conduct or assault, whereas crimes like motor vehicle theft may be unaffected by the game result.
@@ -77,12 +79,11 @@ Findings suggested that more crime occurred in and around the LA Dodgers stadium
 
 Team 3 used the Safegraph data to explore the spatial and temporal relationship between vehicle crime and footfall in Los Angeles. The team hypothesised that higher footfall (i.e. crowding) would be associated with elevated vehicle crime due to the anonymity of crowds. Specifically, the team expected a lagged relationship: that an increase in crowds during time point _t_ would be associated with an increase in vehicle crime during _t+1_.
 
-The team found a temporal variation in vehicles crimes, and there was some evidence to suggest an association with crowding. Vehicle crime counts appeared to increase as the day progressed, peaking during the afternoon rush hour, before declining into the late evening. 
+The team found a temporal variation in vehicles crimes, and there was some evidence to suggest an association with crowding. In a typical day during June, vehicle crime counts peaked during the afternoon rush hour and remained high into the evening (see Figure 1). The team found a positive, statistically significant relationship between footfall counts and crowding, providing support for their hypothesis. However, marginal effects models suggested that the nature of this relationship (strength and direction) varied depending on the time of day.
 
 ```{r team3, fig.pos = 'H', fig.align='center', message=F, comment=F, warning=F, fig.cap = "Example visual produced by Team 3 during the hackathon using Safegraph footfall data and open police-recorded crime data on vehicle crimes.", out.width = "90%"}
 knitr::include_graphics("visuals/vehicle_hours.png")
 ```
-
 
 # Discussion
 
@@ -92,6 +93,6 @@ knitr::include_graphics("visuals/vehicle_hours.png")
 
 # Conclusions
 
-We believe that this Open Research format could be used widely. Use of open data as well as collaborative working on the internet would remove barriers attached to traditional collaborative research.  
+In this paper we have reported on the design and outputs from a community-orientated open research format to tackle research questions on crowds, safety and crime. Contributions from the event are twofold. First, participants actively contributed to the field's scientific evidence-base. Using novel data sources from Retrosheet and Safegraph, teams produced theoretically-driven findings which described and explained the temporal and spatial relationships between crowding and police-recorded crime. Teams intend to advance these analyses for publication in crime science and geography journals. Secondly, the hackathon-style event showcases the benefits and importance of a community-driven, open research format. In reporting the event design here, we hope to provide a template and inspire future events to examine topics in criminology, policing and urban analytics.
 
 # References
