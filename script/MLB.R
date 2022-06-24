@@ -465,7 +465,7 @@ count_test
 # ================================================ #
 # Save workspace so we have this.                  #
 # save.image(file = "mlb_density_workspace.RData") #
-load(file = "mlb_density_workspace.RData") 
+load(file = "data/mlb_density_workspace.RData") 
 # ================================================ #
 
 # Distribution of dependent variable.
@@ -483,7 +483,7 @@ gl_stads_sub_crimes_df <- gl_stads_sub_crimes_df %>%
 # Is density better than population count to predict crime?
 
 # Scientific notation off to see full results.
-options(scipen=99999
+options(scipen=99999)
 
 # Models 1: attendance and attendance density as IV.
 m1a <- glm(crime_count ~ attendance, data = gl_stads_sub_crimes_df, family = "poisson")
@@ -510,3 +510,14 @@ summary(m2c)
 
 m2d <- lm(log(crime_count) ~ attend_density_n + attend_density_n*NAME, data = gl_stads_sub_crimes_df)
 summary(m2d)
+
+
+example <- gl_stads_sub_crimes_df %>% filter(NAME %in% c("Wrigley Field", "Dodger Stadium"))
+
+p1 <- ggplot(example, aes(x = attendance, y = crime_count)) + 
+  geom_point(aes(group = NAME, colour = NAME)) 
+
+p2 <- ggplot(example, aes(x = attend_density_n, y = crime_count)) + 
+  geom_point(aes(group = NAME, colour = NAME))
+gridExtra::grid.arrange(p1,p2)
+
