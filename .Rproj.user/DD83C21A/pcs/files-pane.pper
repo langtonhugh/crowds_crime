@@ -1,9 +1,9 @@
 {
-    "path" : "~/GitHub/crowds_crime",
-    "sortOrder" : [
+    "path": "~/GitHub/crowds_crime/script",
+    "sortOrder": [
         {
-            "ascending" : true,
-            "columnIndex" : 2
+            "columnIndex": 2,
+            "ascending": true
         }
     ]
 }
